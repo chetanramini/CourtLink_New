@@ -33,6 +33,7 @@ type CourtAvailability struct {
 	CourtName   string `json:"CourtName"`
 	CourtStatus uint   `json:"CourtStatus"`
 	CourtID     uint   `json:"CourtID"`
+	SportID     uint   `json:"SportID"`
 	Slots       []int  `json:"Slots"`
 }
 
