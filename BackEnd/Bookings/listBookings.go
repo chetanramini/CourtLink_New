@@ -34,65 +34,38 @@ func ListBookings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 1. Find Customer
 	var customer DataBase.Customer
-	err := DataBase.DB.Raw("SELECT * FROM Customer WHERE Email = ?", email).Scan(&customer).Error
-	if err != nil || customer.Customer_ID == 0 {
+	if err := DataBase.DB.Where("\"Email\" = ?", email).First(&customer).Error; err != nil {
 		http.Error(w, "Customer not found", http.StatusNotFound)
 		return
 	}
 
-	type bookingRaw struct {
-		BookingID     uint   `json:"booking_id"`
-		CourtName     string `json:"court_name"`
-		SportName     string `json:"sport_name"`
-		SlotIndex     int    `json:"slot_index"`
-		BookingStatus string `json:"booking_status"`
-	}
-
-	var bookingsRaw []bookingRaw
-
-	err = DataBase.DB.Raw(`
-		SELECT 
-			b.Booking_ID as booking_id, 
-			c.Court_Name as court_name, 
-			s.Sport_name as sport_name, 
-			b.Booking_Time as slot_index, 
-			b.Booking_Status as booking_status
-		FROM Bookings b
-		INNER JOIN Court c ON c.Court_ID = b.Court_ID
-		INNER JOIN Sport s ON s.Sport_ID = b.Sport_ID
-		WHERE b.Customer_ID = ?`,
-		customer.Customer_ID).Scan(&bookingsRaw).Error
-	if err != nil {
+	// 2. Find Bookings with Associations
+	var bookings []DataBase.Bookings
+	if err := DataBase.DB.Preload("Court").Preload("Sport").Where("\"Customer_ID\" = ?", customer.Customer_ID).Find(&bookings).Error; err != nil {
 		http.Error(w, "Database error while fetching bookings", http.StatusInternalServerError)
 		return
 	}
 
 	slots := []string{
-		"8-9 AM",
-		"9-10 AM",
-		"10-11 AM",
-		"11-12 AM",
-		"12-1 PM",
-		"1-2 PM",
-		"2-3 PM",
-		"3-4 PM",
-		"4-5 PM",
-		"5-6 PM",
+		"08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
+		"12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00",
+		"16:00 - 17:00", "17:00 - 18:00",
 	}
 
 	var responseBookings []BookingResponse
-	for _, b := range bookingsRaw {
+	for _, b := range bookings {
 		slotTime := ""
-		if b.SlotIndex >= 0 && b.SlotIndex < len(slots) {
-			slotTime = slots[b.SlotIndex]
+		if b.Booking_Time >= 0 && b.Booking_Time < len(slots) {
+			slotTime = slots[b.Booking_Time]
 		}
 		responseBookings = append(responseBookings, BookingResponse{
-			BookingID:     b.BookingID,
-			CourtName:     b.CourtName,
-			SportName:     b.SportName,
+			BookingID:     b.Booking_ID,
+			CourtName:     b.Court.Court_Name,
+			SportName:     b.Sport.Sport_name,
 			SlotTime:      slotTime,
-			BookingStatus: b.BookingStatus,
+			BookingStatus: b.Booking_Status,
 		})
 	}
 
