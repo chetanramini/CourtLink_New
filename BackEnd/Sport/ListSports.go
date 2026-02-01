@@ -12,13 +12,13 @@ import (
 // @Description Fetches all sports names from the database
 // @Tags sports
 // @Produce json
-// @Success 200 {array} string "List of sport names"
+// @Success 200 {array} DataBase.Sport "List of sports"
 // @Failure 500 {object} map[string]string "Failed to fetch sports"
 // @Router /ListSports [get]
 func ListSports(w http.ResponseWriter, r *http.Request) {
-	var sports []string
+	var sports []DataBase.Sport
 
-	if err := DataBase.DB.Model(&DataBase.Sport{}).Pluck("Sport_name", &sports).Error; err != nil {
+	if err := DataBase.DB.Find(&sports).Error; err != nil {
 		fmt.Println("Failed to fetch sports:", err)
 		http.Error(w, "Failed to fetch sports", http.StatusInternalServerError)
 		return

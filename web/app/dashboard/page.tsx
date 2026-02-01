@@ -6,8 +6,15 @@ import { Loader2, Trophy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+// Define Sport interface
+interface Sport {
+    Sport_ID: number;
+    Sport_name: string;
+    Sport_Description?: string;
+}
+
 export default function DashboardPage() {
-  const [sports, setSports] = useState<string[]>([]);
+  const [sports, setSports] = useState<Sport[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -37,7 +44,7 @@ export default function DashboardPage() {
 
   return (
     <div className="text-white font-sans pb-20">
-      <div className="max-w-7xl mx-auto px-8">
+      <div className="max-w-6xl mx-auto px-6">
 
         {/* Header Section */}
         <div className="py-8">
@@ -69,15 +76,15 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sports.map((sport) => (
             <Card
-              key={sport}
+              key={sport.Sport_ID}
               className="cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border-none h-48 flex flex-col items-center justify-center group bg-white text-gray-800 rounded-xl"
-              onClick={() => router.push(`/dashboard/courts?sport=${sport}`)}
+              onClick={() => router.push(`/dashboard/courts?sport=${sport.Sport_name}`)}
             >
               <CardContent className="flex flex-col items-center justify-center p-6 gap-4">
                 <div className="h-16 w-16 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-[#005B8D]/10 transition-colors">
                   <Trophy className="h-8 w-8 text-[#005B8D]" />
                 </div>
-                <h2 className="text-xl font-bold text-center tracking-wide">{sport}</h2>
+                <h2 className="text-xl font-bold text-center tracking-wide">{sport.Sport_name}</h2>
               </CardContent>
             </Card>
           ))}

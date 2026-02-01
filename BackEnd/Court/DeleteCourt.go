@@ -24,24 +24,32 @@ func DeleteCourt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Invalid request body"})
 		return
 	}
 
 	var court DataBase.Court
 	result := DataBase.DB.Where("Court_Name = ?", requestData.Court_Name).First(&court)
 	if result.RowsAffected == 0 {
-		http.Error(w, "Court not found", http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Court not found"})
 		return
 	}
 
 	if err := DataBase.DB.Where("Court_ID = ?", court.Court_ID).Delete(&DataBase.Court_TimeSlots{}).Error; err != nil {
-		http.Error(w, "Failed to delete court time slots", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to delete court time slots"})
 		return
 	}
 
 	if err := DataBase.DB.Delete(&court).Error; err != nil {
-		http.Error(w, "Failed to delete court", http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Failed to delete court"})
 		return
 	}
 

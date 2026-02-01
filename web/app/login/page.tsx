@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "aws-amplify/auth";
+import { signIn, signOut } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
@@ -42,12 +42,38 @@ export default function LoginPage() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         setError("");
+
         try {
             await signIn({ username: values.email, password: values.password });
+
+            // On successful login, check if Admin
+            if (values.email.toLowerCase().includes("admin")) { // Simple check, or rely on specific response
+                // Ideally we check groups or attributes, but for now:
+                if (values.email === "admin@courtlink.com") { // Example
+                    localStorage.setItem("adminAuthenticated", "true");
+                    router.push("/dashboard/admin");
+                    return;
+                }
+            }
             router.push("/dashboard");
+
         } catch (err: any) {
-            console.error(err);
-            setError(err.message || "Failed to sign in");
+            console.error("Login error:", err);
+
+            // Check if user is already signed in
+            if (err.name === "UserAlreadyAuthenticatedException" || err.message?.includes("already a signed in user")) {
+                try {
+                    await signOut();
+                    // Retry login once
+                    await signIn({ username: values.email, password: values.password });
+                    router.push("/dashboard");
+                    return;
+                } catch (retryErr) {
+                    setError("Session mismatch. Please refresh and try again.");
+                }
+            } else {
+                setError(err.message || "Failed to sign in");
+            }
         } finally {
             setIsLoading(false);
         }

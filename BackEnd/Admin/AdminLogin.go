@@ -31,7 +31,8 @@ func AdminLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var admin DataBase.Admin
-	result := DataBase.DB.Where("Username = ? AND Password = ?", loginReq.Username, loginReq.Password).First(&admin)
+	// GORM raw query or quoted Where clause is needed for Case Sensitive columns in Postgres
+	result := DataBase.DB.Where("\"Username\" = ? AND \"Password\" = ?", loginReq.Username, loginReq.Password).First(&admin)
 	if result.Error != nil || result.RowsAffected == 0 {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return

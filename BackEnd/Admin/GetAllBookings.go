@@ -18,27 +18,15 @@ import (
 // @Router /admin/allBookings [get]
 func GetAllBookings(w http.ResponseWriter, r *http.Request) {
 
-	type bookingRaw struct {
-		BookingID     uint   `json:"booking_id"`
-		CustomerName  string `json:"customer_name"`
-		CustomerEmail string `json:"customer_email"`
-		CourtName     string `json:"court_name"`
-		SportName     string `json:"sport_name"`
-		SlotIndex     int    `json:"slot_index"`
-		BookingStatus string `json:"booking_status"`
-	}
-
-	var bookingsRaw []bookingRaw
-
-	// Join with Customer, Court, and Sport tables
-	err := DataBase.DB.Table("Bookings").
-		Select("Bookings.Booking_ID as booking_id, Customer.Name as customer_name, Customer.Email as customer_email, Court.Court_Name as court_name, Sport.Sport_name as sport_name, Bookings.Booking_Time as slot_index, Bookings.Booking_Status as booking_status").
-		Joins("JOIN Customer ON Customer.Customer_ID = Bookings.Customer_ID").
-		Joins("JOIN Court ON Court.Court_ID = Bookings.Court_ID").
-		Joins("JOIN Sport ON Sport.Sport_ID = Bookings.Sport_ID").
-		Scan(&bookingsRaw).Error
-
-	if err != nil {
+	var bookings []DataBase.Bookings
+	// Use Preload to fetch relationships safely
+	// Filtering: Exclude any booking that is "Cancelled" or "Cancelled by UF CourtLink"
+	if err := DataBase.DB.
+		Where("\"Booking_Status\" NOT LIKE ?", "Cancelled%").
+		Preload("Customer").
+		Preload("Court").
+		Preload("Sport").
+		Find(&bookings).Error; err != nil {
 		http.Error(w, "Database error while fetching bookings", http.StatusInternalServerError)
 		return
 	}
@@ -49,34 +37,33 @@ func GetAllBookings(w http.ResponseWriter, r *http.Request) {
 		"16:00 - 17:00", "17:00 - 18:00",
 	}
 
-	// Reuse BookingResponse structure but maybe extend it if needed,
-	// or just use map/struct here to include Customer info which is important for Admin.
-	// Let's create a custom response struct for Admin to include Customer Name/Email.
 	type AdminBookingResponse struct {
 		Bookings.BookingResponse
 		CustomerName  string `json:"customer_name"`
+		CustomerUFID  string `json:"customer_ufid"`
 		CustomerEmail string `json:"customer_email"`
 	}
 
 	var responseBookings []AdminBookingResponse
-	for _, b := range bookingsRaw {
+	for _, b := range bookings {
 		slotTime := ""
-		if b.SlotIndex >= 0 && b.SlotIndex < len(slots) {
-			slotTime = slots[b.SlotIndex]
+		if b.Booking_Time >= 0 && b.Booking_Time < len(slots) {
+			slotTime = slots[b.Booking_Time]
 		}
 
 		baseResponse := Bookings.BookingResponse{
-			BookingID:     b.BookingID,
-			CourtName:     b.CourtName,
-			SportName:     b.SportName,
+			BookingID:     b.Booking_ID,
+			CourtName:     b.Court.Court_Name,
+			SportName:     b.Sport.Sport_name,
 			SlotTime:      slotTime,
-			BookingStatus: b.BookingStatus,
+			BookingStatus: b.Booking_Status,
 		}
 
 		responseBookings = append(responseBookings, AdminBookingResponse{
 			BookingResponse: baseResponse,
-			CustomerName:    b.CustomerName,
-			CustomerEmail:   b.CustomerEmail,
+			CustomerName:    b.Customer.Name,
+			CustomerUFID:    b.Customer.UFID,
+			CustomerEmail:   b.Customer.Email,
 		})
 	}
 

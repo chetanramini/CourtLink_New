@@ -43,9 +43,11 @@ func CreateCourtWithTimeSlots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var sport DataBase.Sport
-	err = DataBase.DB.Where("Sport_name = ?", requestData.Sport_name).First(&sport).Error
+	err = DataBase.DB.Where("\"Sport_name\" = ?", requestData.Sport_name).First(&sport).Error
 	if err != nil {
-		http.Error(w, "Sport not found", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Sport not found"})
 		return
 	}
 

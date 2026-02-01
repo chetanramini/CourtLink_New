@@ -21,30 +21,36 @@ func CreateSport(w http.ResponseWriter, r *http.Request) {
 	var s DataBase.Sport
 	err := json.NewDecoder(r.Body).Decode(&s)
 
-	if s.Sport_name == "" {
-		http.Error(w, "Sport_name is required", http.StatusBadRequest)
+	w.Header().Set("Content-Type", "application/json")
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Invalid request body"})
 		return
 	}
 
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if s.Sport_name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "Sport_name is required"})
 		return
 	}
 
 	var existingSport DataBase.Sport
-	result := DataBase.DB.Where("Sport_name = ?", s.Sport_name).First(&existingSport)
+	// Case sensitive lookup
+	result := DataBase.DB.Where("\"Sport_name\" = ?", s.Sport_name).First(&existingSport)
 
 	if result.RowsAffected > 0 {
-		http.Error(w, "The sport record already exists", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"message": "The sport record already exists"})
 		return
 	}
 
 	if err := DataBase.DB.Create(&s).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"message": err.Error()})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	response := map[string]interface{}{
 		"message": "Sport record added successfully!!",

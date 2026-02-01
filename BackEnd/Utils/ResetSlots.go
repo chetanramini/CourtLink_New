@@ -2,7 +2,9 @@ package Utils
 
 import (
 	"BackEnd/DataBase"
+	"encoding/json"
 	"log"
+	"net/http"
 )
 
 // ResetCourtSlots godoc
@@ -27,15 +29,15 @@ func ResetTimeSlotsForAvailableCourts(courtName string) error {
 	)
 
 	var courtIDs []uint
-	db := DataBase.DB.Model(&DataBase.Court{}).Where("court_status = ?", AvailableStatus)
+	db := DataBase.DB.Model(&DataBase.Court{}).Where("\"Court_Status\" = ?", AvailableStatus)
 
-	// If a court name is provided, filter by that name
+	// If a court name is provided, filter by that name (Case Insensitive)
 	if courtName != "" {
-		db = db.Where("court_name = ?", courtName)
+		db = db.Where("LOWER(\"Court_Name\") = LOWER(?)", courtName)
 	}
 
 	// Get the court IDs that match the condition(s)
-	if err := db.Pluck("court_id", &courtIDs).Error; err != nil {
+	if err := db.Pluck("\"Court_ID\"", &courtIDs).Error; err != nil {
 		return err
 	}
 
@@ -56,10 +58,22 @@ func ResetTimeSlotsForAvailableCourts(courtName string) error {
 		"slot_16_17": SlotAvailable, "slot_17_18": SlotAvailable,
 	}
 
+	// Update slots to available
 	if err := DataBase.DB.
 		Model(&DataBase.Court_TimeSlots{}).
-		Where("court_id IN ?", courtIDs).
+		Where("\"Court_ID\" IN ?", courtIDs).
 		Updates(slotReset).Error; err != nil {
+		return err
+	}
+
+	// Cancel all associated active bookings for these courts
+	if err := DataBase.DB.
+		Model(&DataBase.Bookings{}).
+		Where("\"Court_ID\" IN ? AND \"Booking_Status\" = ?", courtIDs, "Confirmed").
+		Update("Booking_Status", "Cancelled by UF CourtLink").Error; err != nil {
+		// Log error but don't fail the whole reset? Or fail?
+		// For admin reset, we probably want to know.
+		log.Printf("Failed to cancel bookings for reset courts: %v\n", err)
 		return err
 	}
 
@@ -70,4 +84,36 @@ func ResetTimeSlotsForAvailableCourts(courtName string) error {
 	}
 
 	return nil
+}
+// DeleteAllBookings deletes all bookings from the database
+func DeleteAllBookings(w http.ResponseWriter, r *http.Request) {
+	if err := DataBase.DB.Exec("TRUNCATE TABLE \"Bookings\" RESTART IDENTITY CASCADE").Error; err != nil {
+		http.Error(w, "Failed to delete all bookings", http.StatusInternalServerError)
+		return
+	}
+	// Also reset all slots to 1
+	DataBase.DB.Exec("UPDATE \"Court_TimeSlots\" SET slot_08_09=1, slot_09_10=1, slot_10_11=1, slot_11_12=1, slot_12_13=1, slot_13_14=1, slot_14_15=1, slot_15_16=1, slot_16_17=1, slot_17_18=1")
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "All bookings deleted and slots reset"})
+}
+
+// ResetSystem wipes Customers and Bookings
+func ResetSystem(w http.ResponseWriter, r *http.Request) {
+	// Truncate Bookings
+	if err := DataBase.DB.Exec("TRUNCATE TABLE \"Bookings\" RESTART IDENTITY CASCADE").Error; err != nil {
+		log.Printf("Failed to truncate bookings: %v\n", err)
+	}
+	// Truncate Customers
+	if err := DataBase.DB.Exec("TRUNCATE TABLE \"Customer\" RESTART IDENTITY CASCADE").Error; err != nil {
+		log.Printf("Failed to truncate customers: %v\n", err)
+	}
+
+	// Reset slots
+	DataBase.DB.Exec("UPDATE \"Court_TimeSlots\" SET slot_08_09=1, slot_09_10=1, slot_10_11=1, slot_11_12=1, slot_12_13=1, slot_13_14=1, slot_14_15=1, slot_15_16=1, slot_16_17=1, slot_17_18=1")
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "System Wiped (Customers & Bookings)"})
 }

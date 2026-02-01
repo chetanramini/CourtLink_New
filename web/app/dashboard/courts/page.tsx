@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2, ArrowLeft, Clock } from "lucide-react";
+import { Loader2, ArrowLeft, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { fetchUserAttributes } from "aws-amplify/auth";
 
 interface CourtAvailability {
     CourtName: string;
+    CourtLocation: string; // Added field
     CourtStatus: number;
     CourtID: number;
     SportID: number;
@@ -143,7 +144,7 @@ function CourtsContent() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#005B8D] to-[#F26A2E] p-8 text-white font-sans">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="p-6 -mt-5">
                     <div className="flex items-center gap-4 mb-4">
@@ -169,62 +170,55 @@ function CourtsContent() {
                 )}
 
                 {/* Courts Grid */}
-                <div className="grid grid-cols-1 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {courts.map((court) => (
-                        <Card key={court.CourtID} className="overflow-hidden bg-white border-none shadow-xl rounded-2xl text-gray-800">
-                            <div className="flex flex-col md:flex-row h-full">
-                                {/* Left: Info */}
-                                <div className="p-8 md:w-1/3 flex flex-col justify-between bg-gray-50 border-r border-gray-100">
-                                    <div>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h3 className="text-2xl font-bold text-gray-900">{court.CourtName}</h3>
-                                            <Badge className={`${court.CourtStatus === 1 ? "bg-green-500 hover:bg-green-600" : "bg-red-500"} text-white px-3 py-1 text-sm`}>
-                                                {court.CourtStatus === 1 ? "Available" : "Closed"}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-gray-500 font-medium flex items-center gap-2 mt-4">
-                                            <Clock className="h-5 w-5 text-[#005B8D]" />
-                                            Operating Hours: 08:00 - 18:00
-                                        </p>
-                                    </div>
-                                    {/* Placeholder Image */}
-                                    <div className="mt-8 rounded-xl bg-gray-200 h-40 w-full flex items-center justify-center text-gray-400">
-                                        Court Image
-                                    </div>
+                        <Card key={court.CourtID} className="overflow-hidden bg-white border-none shadow-lg hover:shadow-xl transition-shadow rounded-2xl text-gray-800 flex flex-col">
+                            {/* Card Header Section */}
+                            <div className="p-6 bg-gray-50 border-b border-gray-100">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h3 className="text-xl font-bold text-gray-900 truncate pr-2" title={court.CourtName}>
+                                        {court.CourtName}
+                                    </h3>
+                                    <Badge className={`${court.CourtStatus === 1 ? "bg-green-500 hover:bg-green-600" : "bg-red-500"} text-white px-2 py-0.5 text-xs whitespace-nowrap`}>
+                                        {court.CourtStatus === 1 ? "Open" : "Closed"}
+                                    </Badge>
                                 </div>
+                                <div className="flex items-center gap-4 text-sm text-gray-500">
+                                    <span className="flex items-center gap-1">
+                                        <MapPin className="h-3.5 w-3.5 text-[#005B8D]" />
+                                        {court.CourtLocation || "Main Gym"}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <Clock className="h-3.5 w-3.5 text-[#005B8D]" />
+                                        08:00 - 18:00
+                                    </span>
+                                </div>
+                            </div>
 
-                                {/* Right: Slots */}
-                                <div className="p-8 md:w-2/3">
-                                    <h4 className="text-lg font-semibold mb-6 flex items-center gap-2 text-gray-800">
-                                        <Clock className="h-5 w-5 text-[#FA4616]" />
-                                        {court.CourtStatus === 1 ? "Select a Time Slot" : "No Slots Available"}
-                                    </h4>
+                            {/* Card Body - Slots */}
+                            <div className="p-4 flex-1 bg-white">
+                                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+                                    <Clock className="h-3 w-3" /> Availability
+                                </h4>
 
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                        {court.Slots.map((status, index) => (
-                                            <Button
-                                                key={index}
-                                                variant="outline"
-                                                disabled={status === 0 || court.CourtStatus !== 1}
-                                                className={`
-                                        h-auto py-3 px-2 flex flex-col items-center gap-1 border-2 transition-all
-                                        ${status === 1
-                                                        ? 'border-green-100 bg-green-50 hover:bg-green-100 hover:border-green-400 text-green-900'
-                                                        : 'bg-gray-100 border-gray-100 text-gray-400 cursor-not-allowed opacity-60'}
-                                    `}
-                                                onClick={() => handleBookClick(court, index)}
-                                            >
-                                                <span className="text-sm font-bold">{timeSlotsLabels[index]}</span>
-                                                <div className="mt-1">
-                                                    {status === 1 ?
-                                                        <span className="text-[10px] uppercase font-bold text-green-600 bg-green-200 px-2 py-0.5 rounded-full">Open</span>
-                                                        :
-                                                        <span className="text-[10px] uppercase font-bold text-gray-500">Booked</span>
-                                                    }
-                                                </div>
-                                            </Button>
-                                        ))}
-                                    </div>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                    {court.Slots.map((status, index) => (
+                                        <Button
+                                            key={index}
+                                            variant="outline"
+                                            disabled={status === 0 || court.CourtStatus !== 1}
+                                            size="sm"
+                                            className={`
+                                                h-9 px-0 m-0 w-full text-xs font-medium border transition-all
+                                                ${status === 1
+                                                    ? 'border-green-200 bg-green-50 hover:bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 border-gray-100 text-gray-300 cursor-not-allowed'}
+                                            `}
+                                            onClick={() => handleBookClick(court, index)}
+                                        >
+                                            {timeSlotsLabels[index].split(' - ')[0]}
+                                        </Button>
+                                    ))}
                                 </div>
                             </div>
                         </Card>
