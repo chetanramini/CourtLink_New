@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@import "tw-animate-css";
+
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -121,5 +122,11 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bg-gator-gradient {
+    background-image: linear-gradient(to bottom, #005B8D, #F26A2E);
   }
 }
