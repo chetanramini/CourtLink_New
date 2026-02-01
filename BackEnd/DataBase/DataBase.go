@@ -84,9 +84,10 @@ type Bookings struct {
 	Booking_Status string `gorm:"column:Booking_Status;not null" json:"Booking_Status"`
 	Booking_Time   int    `gorm:"column:Booking_Time;not null" json:"Booking_Time"`
 
-	Customer Customer `gorm:"foreignKey:Customer_ID;references:Customer_ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Sport    Sport    `gorm:"foreignKey:Sport_ID;references:Sport_ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Court    Court    `gorm:"foreignKey:Court_ID;references:Court_ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	// Simplified tags to let GORM handle constraints correctly
+	Customer Customer `gorm:"foreignKey:Customer_ID"`
+	Sport    Sport    `gorm:"foreignKey:Sport_ID"`
+	Court    Court    `gorm:"foreignKey:Court_ID"`
 }
 
 type Admin struct {

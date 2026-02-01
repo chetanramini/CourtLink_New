@@ -37,7 +37,7 @@ func GetCourt(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Sport Selection:", sportName)
 
 	// Check if sport exists
-	if err := DataBase.DB.Where("Sport_name = ?", sportName).First(&sport).Error; err != nil {
+	if err := DataBase.DB.Where("\"Sport_name\" = ?", sportName).First(&sport).Error; err != nil {
 		fmt.Println("Sport not found:", err)
 		http.Error(w, "Sport not found", http.StatusNotFound)
 		return
@@ -45,8 +45,8 @@ func GetCourt(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch courts for the given sport
 	if err := DataBase.DB.Model(&DataBase.Court{}).
-		Select("Court_ID, Court_Name, Court_Status").
-		Where("Sport_id = ?", sport.Sport_ID).
+		Select("\"Court_ID\", \"Court_Name\", \"Court_Status\"").
+		Where("\"Sport_id\" = ?", sport.Sport_ID).
 		Find(&courtData).Error; err != nil || len(courtData) == 0 { // Fix: Check for empty result
 		fmt.Println("No courts found for the sport")
 		http.Error(w, "No courts available for the selected sport", http.StatusNotFound)
@@ -61,7 +61,7 @@ func GetCourt(w http.ResponseWriter, r *http.Request) {
 	// Fetch time slots
 	var courtTimeSlots []DataBase.Court_TimeSlots
 	if err := DataBase.DB.
-		Where("Court_ID IN (?)", courtIDs).
+		Where("\"Court_ID\" IN (?)", courtIDs).
 		Find(&courtTimeSlots).Error; err != nil {
 		fmt.Println("Court TimeSlots not found:", err)
 		http.Error(w, "Court TimeSlots not found", http.StatusNotFound)

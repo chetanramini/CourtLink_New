@@ -64,9 +64,7 @@ export default function RegisterPage() {
 
             if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
                 setNeedsConfirmation(true);
-                // Ideally redirect to a confirmation page
-                alert("Registration successful! Please check your email for the confirmation code.");
-                router.push("/login");
+                router.push(`/confirm?email=${encodeURIComponent(values.email)}`);
             }
         } catch (err: any) {
             console.error(err);
