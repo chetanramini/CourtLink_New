@@ -1,0 +1,5 @@
+CourtLink.db
+*.exe
+*.test
+vendor/
+.DS_Store
