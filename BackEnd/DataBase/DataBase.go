@@ -2,8 +2,9 @@ package DataBase
 
 import (
 	"fmt"
+	"os"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -122,8 +123,24 @@ func (Admin) TableName() string {
 
 func init() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("../CourtLink.db"), &gorm.Config{})
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		// Fallback for local development or when env var is missing
+		// Warning: Defaults to localhost postgres. Ensure a local postgres is running or set DATABASE_URL.
+		dsn = "host=localhost user=postgres password=postgres dbname=courtlink port=5432 sslmode=disable"
+		fmt.Println("DATABASE_URL not set, using default: ", dsn)
+	}
+
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Failed to connect to database: %v\n", err)
+	} else {
+		fmt.Println("Successfully connected to the database")
+		
+		// AutoMigrate
+		err = DB.AutoMigrate(&Customer{}, &Sport{}, &Court{}, &Court_TimeSlots{}, &Bookings{}, &Admin{})
+		if err != nil {
+			fmt.Printf("Failed to migrate database: %v\n", err)
+		}
 	}
 }
