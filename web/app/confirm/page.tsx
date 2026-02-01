@@ -62,11 +62,15 @@ function ConfirmForm() {
 
     if (success) {
         return (
-            <Card className="w-[400px] shadow-lg">
-                <CardContent className="pt-6">
-                    <div className="text-center text-green-600 space-y-2">
-                        <h3 className="text-xl font-bold">Account Confirmed!</h3>
-                        <p>Redirecting to login...</p>
+            <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm">
+                <CardContent className="pt-8 pb-8">
+                    <div className="text-center space-y-4">
+                        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                            <span className="text-3xl">✅</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-[#005B8D]">Ready to Chomp!</h3>
+                        <p className="text-gray-600">Account verified successfully.</p>
+                        <p className="text-sm text-gray-400">Redirecting to login...</p>
                     </div>
                 </CardContent>
             </Card>
@@ -74,10 +78,13 @@ function ConfirmForm() {
     }
 
     return (
-        <Card className="w-[400px] shadow-lg">
-            <CardHeader>
-                <CardTitle className="text-2xl font-bold text-center">Verify Account</CardTitle>
-                <CardDescription className="text-center">
+        <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm">
+            <CardHeader className="space-y-1">
+                <div className="flex justify-center mb-4">
+                    <span className="text-4xl">🐊</span>
+                </div>
+                <CardTitle className="text-3xl font-bold text-center text-[#005B8D]">Verify Account</CardTitle>
+                <CardDescription className="text-center text-gray-500 font-medium">
                     Enter the code sent to your email
                 </CardDescription>
             </CardHeader>
@@ -89,9 +96,9 @@ function ConfirmForm() {
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Email</FormLabel>
+                                    <FormLabel className="text-gray-700">Email</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="m@example.com" {...field} />
+                                        <Input placeholder="gator@ufl.edu" {...field} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616]" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -102,17 +109,17 @@ function ConfirmForm() {
                             name="code"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Confirmation Code</FormLabel>
+                                    <FormLabel className="text-gray-700">Confirmation Code</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="123456" {...field} />
+                                        <Input placeholder="123456" {...field} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616] text-center tracking-widest text-lg" />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
-                        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Confirm Account"}
+                        {error && <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-100 text-center">{error}</div>}
+                        <Button type="submit" className="w-full bg-[#005B8D] hover:bg-[#004b75] text-white font-bold h-11 transition-all" disabled={isLoading}>
+                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Confirm & Log In"}
                         </Button>
                     </form>
                 </Form>
@@ -123,8 +130,8 @@ function ConfirmForm() {
 
 export default function ConfirmPage() {
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-            <Suspense fallback={<div>Loading...</div>}>
+        <div className="flex items-center justify-center min-h-screen bg-gator-gradient p-4">
+            <Suspense fallback={<div className="text-white">Loading...</div>}>
                 <ConfirmForm />
             </Suspense>
         </div>

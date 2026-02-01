@@ -75,12 +75,15 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-            <Card className="w-[400px] shadow-lg">
-                <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
-                    <CardDescription className="text-center">
-                        Join CourtLink to book your favorite spots
+        <div className="flex items-center justify-center min-h-screen bg-gator-gradient p-4">
+            <Card className="w-full max-w-md shadow-2xl border-none bg-white/95 backdrop-blur-sm">
+                <CardHeader className="space-y-1">
+                    <div className="flex justify-center mb-4">
+                        <span className="text-4xl">🐊</span>
+                    </div>
+                    <CardTitle className="text-3xl font-bold text-center text-[#005B8D]">Join The Swamp</CardTitle>
+                    <CardDescription className="text-center text-gray-500 font-medium">
+                        Create your account to start booking courts.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -91,9 +94,9 @@ export default function RegisterPage() {
                                 name="name"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Full Name</FormLabel>
+                                        <FormLabel className="text-gray-700">Full Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="John Doe" {...field} />
+                                            <Input placeholder="Alberta Gator" {...field} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616]" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -104,9 +107,9 @@ export default function RegisterPage() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Email</FormLabel>
+                                        <FormLabel className="text-gray-700">Email</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="m@example.com" {...field} />
+                                            <Input placeholder="gator@ufl.edu" {...field} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616]" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -117,9 +120,9 @@ export default function RegisterPage() {
                                 name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Password</FormLabel>
+                                        <FormLabel className="text-gray-700">Password</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="••••••••" {...field} />
+                                            <Input type="password" placeholder="••••••••" {...field} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616]" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -130,25 +133,25 @@ export default function RegisterPage() {
                                 name="confirmPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Confirm Password</FormLabel>
+                                        <FormLabel className="text-gray-700">Confirm Password</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="••••••••" {...field} />
+                                            <Input type="password" placeholder="••••••••" {...field} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616]" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
-                            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-                            <Button type="submit" className="w-full" disabled={isLoading}>
+                            {error && <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md border border-red-100 text-center">{error}</div>}
+                            <Button type="submit" className="w-full bg-[#FA4616] hover:bg-[#d13a10] text-white font-bold h-11 transition-all" disabled={isLoading}>
                                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign Up"}
                             </Button>
                         </form>
                     </Form>
                 </CardContent>
-                <CardFooter className="flex justify-center">
+                <CardFooter className="flex flex-col gap-4 text-center pb-8">
                     <p className="text-sm text-gray-500">
                         Already have an account?{" "}
-                        <Link href="/login" className="text-blue-600 hover:underline">
+                        <Link href="/login" className="text-[#005B8D] font-semibold hover:underline">
                             Sign in
                         </Link>
                     </p>
