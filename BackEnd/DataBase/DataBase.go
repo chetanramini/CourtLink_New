@@ -30,16 +30,18 @@ type CourtUpdate struct {
 }
 
 type CourtAvailability struct {
-	CourtName   string `json:"CourtName"`
-	CourtStatus uint   `json:"CourtStatus"`
-	CourtID     uint   `json:"CourtID"`
-	SportID     uint   `json:"SportID"`
-	Slots       []int  `json:"Slots"`
+	CourtName     string `json:"CourtName"`
+	CourtLocation string `json:"CourtLocation"`
+	CourtStatus   uint   `json:"CourtStatus"`
+	CourtID       uint   `json:"CourtID"`
+	SportID       uint   `json:"SportID"`
+	Slots         []int  `json:"Slots"`
 }
 
 type Customer struct {
 	Customer_ID uint   `gorm:"column:Customer_ID;primaryKey;autoIncrement" json:"Customer_ID"`
 	Name        string `gorm:"column:Name" json:"name"`
+	UFID        string `gorm:"column:UFID" json:"ufid"` // Added UFID
 	Contact     string `gorm:"column:Contact" json:"Contact"`
 	Email       string `gorm:"column:Email" json:"email"`
 }
@@ -86,9 +88,9 @@ type Bookings struct {
 	Booking_Time   int    `gorm:"column:Booking_Time;not null" json:"Booking_Time"`
 
 	// Simplified tags to let GORM handle constraints correctly
-	Customer Customer `gorm:"foreignKey:Customer_ID"`
-	Sport    Sport    `gorm:"foreignKey:Sport_ID"`
-	Court    Court    `gorm:"foreignKey:Court_ID"`
+	Customer Customer `gorm:"foreignKey:Customer_ID;references:Customer_ID"`
+	Sport    Sport    `gorm:"foreignKey:Sport_ID;references:Sport_ID"`
+	Court    Court    `gorm:"foreignKey:Court_ID;references:Court_ID"`
 }
 
 type Admin struct {

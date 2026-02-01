@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
-import { Loader2, Calendar, Clock, Trash2, ArrowLeft } from "lucide-react";
+import { Loader2, Calendar, Clock, Trash2, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,56 @@ interface Booking {
   sport_name: string;
   slot_time: string;
   booking_status: string;
+}
+
+function CancelledBookingsSection({ bookings }: { bookings: Booking[] }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="mt-8 border-t border-white/20 pt-8">
+            <Button 
+                variant="ghost" 
+                onClick={() => setIsOpen(!isOpen)} 
+                className="w-full flex items-center justify-between text-white/70 hover:text-white hover:bg-white/10 p-4 rounded-xl"
+            >
+                <span className="font-semibold text-lg flex items-center gap-2">
+                    <Trash2 className="h-5 w-5" />
+                    Cancelled History ({bookings.length})
+                </span>
+                <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                    {isOpen ? "Hide" : "Show"}
+                </span>
+            </Button>
+
+            {isOpen && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                    {bookings.map((booking) => (
+                        <Card key={booking.booking_id} className="bg-white/50 border-none shadow-sm rounded-xl overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
+                             <CardHeader className="bg-white/40 pb-3">
+                                 <div className="flex justify-between items-start">
+                                     <div>
+                                         <CardTitle className="text-lg font-bold text-gray-700">{booking.court_name}</CardTitle>
+                                         <CardDescription className="text-xs font-mono mt-1 text-gray-600">
+                                             {booking.sport_name}
+                                         </CardDescription>
+                                     </div>
+                                     <Badge variant="outline" className="border-red-300 text-red-700 bg-red-50">
+                                         {booking.booking_status}
+                                     </Badge>
+                                 </div>
+                             </CardHeader>
+                             <CardContent className="pt-4 pb-4">
+                                 <div className="flex items-center gap-3 text-gray-600">
+                                     <Clock className="h-4 w-4" />
+                                     <span className="font-medium text-gray-700">{booking.slot_time}</span>
+                                 </div>
+                             </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 }
 
 function BookingsContent() {
@@ -88,8 +138,10 @@ function BookingsContent() {
                 description: "Your reservation has been removed."
             });
 
-            // Remove from list
-            setBookings(prev => prev.filter(b => b.booking_id !== bookingId));
+            // Update status in list to "Cancelled" (keep it visible)
+            setBookings(prev => prev.map(b => 
+                b.booking_id === bookingId ? { ...b, booking_status: "Cancelled" } : b
+            ));
 
         } catch (error: any) {
              toast.error("Cancellation Failed", {
@@ -110,7 +162,7 @@ function BookingsContent() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#005B8D] to-[#F26A2E] p-8 text-white font-sans">
-             <div className="max-w-7xl mx-auto">
+             <div className="max-w-6xl mx-auto">
                  {/* Header */}
                  <div className="p-6 -mt-5">
                     <div className="flex items-center gap-4 mb-4">
@@ -127,7 +179,7 @@ function BookingsContent() {
                  </div>
 
                  {/* Bookings List */}
-                 {bookings.length === 0 ? (
+                 { bookings.length === 0 ? (
                     <div className="text-center py-20 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl">
                         <h3 className="text-2xl font-semibold text-white mb-4">No active bookings found</h3>
                          <Button onClick={() => router.push("/dashboard")} className="bg-[#FA4616] hover:bg-[#d13a10] text-white">
@@ -135,9 +187,11 @@ function BookingsContent() {
                          </Button>
                     </div>
                  ) : (
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                         {bookings.map((booking) => (
-                             <Card key={booking.booking_id} className="bg-white text-gray-800 border-none shadow-xl rounded-xl overflow-hidden">
+                    <>
+                     {/* Active Bookings Grid */}
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                         {bookings.filter(b => !b.booking_status.includes("Cancelled")).map((booking) => (
+                             <Card key={booking.booking_id} className="bg-white text-gray-800 border-none shadow-xl rounded-xl overflow-hidden transform transition-all hover:scale-[1.02]">
                                  <CardHeader className="bg-gray-50 border-b border-gray-100 pb-4">
                                      <div className="flex justify-between items-start">
                                          <div>
@@ -165,7 +219,7 @@ function BookingsContent() {
                                      <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 gap-2">
-                                                {cancellingId === booking.booking_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                <Trash2 className="h-4 w-4" />
                                                 Cancel Reservation
                                             </Button>
                                         </AlertDialogTrigger>
@@ -189,6 +243,12 @@ function BookingsContent() {
                              </Card>
                          ))}
                      </div>
+
+                     {/* Cancelled Bookings Section */}
+                     {bookings.filter(b => b.booking_status.includes("Cancelled")).length > 0 && (
+                        <CancelledBookingsSection bookings={bookings.filter(b => b.booking_status.includes("Cancelled"))} />
+                     )}
+                    </>
                  )}
              </div>
         </div>

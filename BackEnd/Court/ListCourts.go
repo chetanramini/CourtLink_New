@@ -14,20 +14,18 @@ type CourtData struct {
 
 // ListCourts godoc
 // @Summary      List all courts with their associated sports
-// @Description  Retrieves a list of all courts along with the corresponding sport names.
+// @Description  Retrieves a list of all courts along with the corresponding sport details.
 // @Tags         courts
 // @Accept       json
 // @Produce      json
-// @Success      200    {array}   CourtData  "List of courts and their associated sports"  example([{"court_name": "Court A", "sport_name": "Tennis"}, {"court_name": "Court B", "sport_name": "Basketball"}])
+// @Success      200    {array}   DataBase.Court  "List of courts and their associated sports"
 // @Failure      500    {string}  string  "Database error while fetching courts"
 // @Router       /ListCourts [get]
 func ListCourts(w http.ResponseWriter, r *http.Request) {
-	var courts []CourtData
+	var courts []DataBase.Court
 
-	err := DataBase.DB.Table("Court").
-		Select("Court.Court_Name as CourtName, Sport.Sport_name as SportName").
-		Joins("JOIN Sport ON Sport.Sport_ID = Court.Sport_id").
-		Scan(&courts).Error
+	// Use GORM Preload to fetch the associated Sport for each court
+	err := DataBase.DB.Preload("Sport").Find(&courts).Error
 
 	if err != nil {
 		fmt.Println("Failed to fetch courts:", err)
@@ -38,6 +36,4 @@ func ListCourts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(courts)
-
-	fmt.Println("ListCourts API called successfully")
 }

@@ -24,6 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 const formSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email(),
+    ufid: z.string().length(8, "UFID must be exactly 8 digits").regex(/^\d+$/, "UFID must be numbers only"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -42,6 +43,7 @@ export default function RegisterPage() {
         defaultValues: {
             name: "",
             email: "",
+            ufid: "",
             password: "",
             confirmPassword: "",
         },
@@ -51,7 +53,7 @@ export default function RegisterPage() {
         setIsLoading(true);
         setError("");
         try {
-            const { isSignUpComplete, nextStep } = await signUp({
+            const { nextStep } = await signUp({
                 username: values.email,
                 password: values.password,
                 options: {
@@ -60,6 +62,19 @@ export default function RegisterPage() {
                         email: values.email,
                     },
                 },
+            });
+
+            // Immediately create/update backend profile to avoid "Complete Profile" dialog later
+            // We do this BEFORE confirmation so it's ready. If sign up fails, this might leave an orphan,
+            // but effectively it's harmless as they can't login without confirming.
+            await fetch("http://localhost:8080/Customer", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: values.email,
+                    name: values.name,
+                    ufid: values.ufid,
+                }),
             });
 
             if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
@@ -110,6 +125,19 @@ export default function RegisterPage() {
                                         <FormLabel className="text-gray-700">Email</FormLabel>
                                         <FormControl>
                                             <Input placeholder="gator@ufl.edu" {...field} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616]" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="ufid"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700">UFID (8 Digits)</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="12345678" {...field} maxLength={8} className="bg-gray-50 border-gray-200 focus:ring-[#FA4616] focus:border-[#FA4616]" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

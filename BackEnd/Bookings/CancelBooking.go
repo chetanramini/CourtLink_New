@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type CancelBookingRequest struct {
@@ -38,8 +39,9 @@ func CancelBooking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	normalizedEmail := strings.ToLower(strings.TrimSpace(req.Email))
 	var customer DataBase.Customer
-	if err := DataBase.DB.Where("\"Email\" = ?", req.Email).First(&customer).Error; err != nil {
+	if err := DataBase.DB.Where("LOWER(\"Email\") = ?", normalizedEmail).First(&customer).Error; err != nil {
 		http.Error(w, "Customer not found", http.StatusNotFound)
 		return
 	}
@@ -64,10 +66,11 @@ func CancelBooking(w http.ResponseWriter, r *http.Request) {
 	// 3. Start Transaction
 	tx := DataBase.DB.Begin()
 
-	// 3a. Delete Booking
-	if err := tx.Delete(&booking).Error; err != nil {
+	// 3a. Update Booking Status to "Cancelled" (Soft Cancel)
+	// We do NOT delete so that history is preserved for Admin/User
+	if err := tx.Model(&booking).Update("Booking_Status", "Cancelled").Error; err != nil {
 		tx.Rollback()
-		http.Error(w, "Failed to delete booking", http.StatusInternalServerError)
+		http.Error(w, "Failed to cancel booking", http.StatusInternalServerError)
 		return
 	}
 

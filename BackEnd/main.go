@@ -97,10 +97,17 @@ func main() {
 	r.Use(mux.CORSMethodMiddleware(r))
 
 	r.HandleFunc("/getCourts", Court.GetCourt).Methods("GET", "OPTIONS")
+	r.HandleFunc("/getCourts", Court.GetCourt).Methods("GET", "OPTIONS")
 	r.HandleFunc("/Customer", Customer.CreateCustomer).Methods("POST", "OPTIONS")
+	r.HandleFunc("/GetCustomer", Customer.GetCustomer).Methods("GET", "OPTIONS")
 	r.HandleFunc("/UpdateCourtSlotandBooking", Court.UpdateCourtSlotandBooking).Methods("PUT", "OPTIONS")
 	r.HandleFunc("/CreateBooking", Bookings.CreateBooking).Methods("POST", "OPTIONS")
 	r.HandleFunc("/CreateSport", Sport.CreateSport).Methods("POST", "OPTIONS")
+	r.HandleFunc("/DeleteSport", Sport.DeleteSport).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/ResetSportCourts", Sport.ResetSportCourts).Methods("POST", "OPTIONS")
+	r.HandleFunc("/ResetSportCourts", Sport.ResetSportCourts).Methods("POST", "OPTIONS")
+	r.HandleFunc("/admin/deleteAllBookings", Utils.DeleteAllBookings).Methods("DELETE", "OPTIONS")
+	r.HandleFunc("/admin/resetSystem", Utils.ResetSystem).Methods("DELETE", "OPTIONS")
 	r.HandleFunc("/DeleteCourt", Court.DeleteCourt).Methods("DELETE", "OPTIONS")
 	r.HandleFunc("/CreateCourt", Court.CreateCourtWithTimeSlots).Methods("POST", "OPTIONS")
 	r.HandleFunc("/ListSports", Sport.ListSports).Methods("GET", "OPTIONS")
@@ -114,6 +121,8 @@ func main() {
 	r.HandleFunc("/resetCourtSlots", Court.ResetCourtSlotsHandler).Methods("PUT", "OPTIONS")
 
 	r.HandleFunc("/admin/allBookings", Admin.GetAllBookings).Methods("GET", "OPTIONS")
+	r.HandleFunc("/admin/cancelBooking", Admin.AdminCancelBooking).Methods("POST", "OPTIONS")
+	r.HandleFunc("/create-admin", Admin.SeedAdminCreate).Methods("GET", "OPTIONS")
 
 	newroute := r.PathPrefix("/api").Subrouter()
 	newroute.Use(validateToken)
