@@ -84,9 +84,9 @@ type Bookings struct {
 	Booking_Status string `gorm:"column:Booking_Status;not null" json:"Booking_Status"`
 	Booking_Time   int    `gorm:"column:Booking_Time;not null" json:"Booking_Time"`
 
-	Customer Customer `gorm:"foreignKey:Customer_ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	Sport    Sport    `gorm:"foreignKey:Sport_ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Court    Court    `gorm:"foreignKey:Court_ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Customer Customer `gorm:"foreignKey:Customer_ID;references:Customer_ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Sport    Sport    `gorm:"foreignKey:Sport_ID;references:Sport_ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Court    Court    `gorm:"foreignKey:Court_ID;references:Court_ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
 type Admin struct {
@@ -136,11 +136,21 @@ func init() {
 		fmt.Printf("Failed to connect to database: %v\n", err)
 	} else {
 		fmt.Println("Successfully connected to the database")
-		
-		// AutoMigrate
-		err = DB.AutoMigrate(&Customer{}, &Sport{}, &Court{}, &Court_TimeSlots{}, &Bookings{}, &Admin{})
-		if err != nil {
-			fmt.Printf("Failed to migrate database: %v\n", err)
+
+		// Migrate independent tables first
+		if err := DB.AutoMigrate(&Customer{}, &Sport{}); err != nil {
+			fmt.Printf("Failed to migrate Customer/Sport: %v\n", err)
+		}
+
+		// Migrate Court (depends on Sport?) - check struct
+		// Court struct has 'Sport_id' and 'Sport *Sport'.
+		if err := DB.AutoMigrate(&Court{}); err != nil {
+			fmt.Printf("Failed to migrate Court: %v\n", err)
+		}
+
+		// Migrate dependent tables
+		if err := DB.AutoMigrate(&Court_TimeSlots{}, &Admin{}, &Bookings{}); err != nil {
+			fmt.Printf("Failed to migrate dependent tables: %v\n", err)
 		}
 	}
 }
